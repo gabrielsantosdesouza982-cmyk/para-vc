@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Izabel</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background:
+                radial-gradient(circle at 50% 20%, rgba(255,255,255,0.75), transparent 28%),
+                linear-gradient(180deg, #1a1027 0%, #2f1638 35%, #100b1d 100%);
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        .heart-particles {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .heart-particles span {
+            position: absolute;
+            bottom: -40px;
+            color: rgba(255, 80, 145, 0.78);
+            font-size: 24px;
+            text-shadow: 0 0 12px rgba(255, 70, 140, 0.75);
+            animation: float-up 7s linear infinite;
+        }
+
+        .heart-particles span:nth-child(1) { left: 5%; animation-delay: 0s; animation-duration: 8s; }
+        .heart-particles span:nth-child(2) { left: 14%; animation-delay: 2.3s; animation-duration: 6.5s; }
+        .heart-particles span:nth-child(3) { left: 23%; animation-delay: 4.1s; animation-duration: 9s; }
+        .heart-particles span:nth-child(4) { left: 32%; animation-delay: 1.2s; animation-duration: 7s; }
+        .heart-particles span:nth-child(5) { left: 41%; animation-delay: 3.4s; animation-duration: 8.5s; }
+        .heart-particles span:nth-child(6) { left: 50%; animation-delay: 0.8s; animation-duration: 6s; }
+        .heart-particles span:nth-child(7) { left: 59%; animation-delay: 5s; animation-duration: 7.5s; }
+        .heart-particles span:nth-child(8) { left: 68%; animation-delay: 2.8s; animation-duration: 9.5s; }
+        .heart-particles span:nth-child(9) { left: 77%; animation-delay: 1.7s; animation-duration: 6.8s; }
+        .heart-particles span:nth-child(10) { left: 86%; animation-delay: 4.5s; animation-duration: 8.2s; }
+        .heart-particles span:nth-child(11) { left: 95%; animation-delay: 3.8s; animation-duration: 7.2s; }
+
+        .character-runners {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .runner {
+            position: absolute;
+            left: 0;
+            font-size: clamp(26px, 4vw, 38px);
+            line-height: 1;
+            opacity: 0;
+            animation: run-across var(--duration) linear var(--delay) infinite paused;
+        }
+
+        .runner:nth-child(1) { top: 22%; --duration: 8s; --delay: -1s; }
+        .runner:nth-child(2) { top: 39%; --duration: 10s; --delay: -5s; }
+        .runner:nth-child(3) { top: 61%; --duration: 9s; --delay: -3s; }
+        .runner:nth-child(4) { top: 78%; --duration: 11s; --delay: -7s; }
+
+        .character-runners.is-active .runner {
+            animation-play-state: running;
+        }
+
+        @keyframes run-across {
+            0% {
+                opacity: 0;
+                transform: translate(-12vw, 0) rotate(-10deg);
+            }
+            8%, 88% {
+                opacity: 1;
+            }
+            50% {
+                transform: translate(50vw, -12px) rotate(8deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(112vw, 0) rotate(-8deg);
+            }
+        }
+
+        .scene {
+            position: relative;
+            z-index: 2;
+            width: min(520px, calc(100vw - 28px));
+            height: min(740px, calc(100vh - 28px));
+            height: min(740px, calc(100dvh - 28px));
+            display: grid;
+            place-items: center;
+        }
+
+        .letter {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            place-items: center;
+            perspective: 900px;
+        }
+
+        .envelope {
+            position: absolute;
+            width: min(320px, calc(100vw - 48px));
+            height: 196px;
+            border: 0;
+            border-radius: 8px;
+            background: linear-gradient(145deg, #ef7898, #c83d6b);
+            box-shadow: 0 18px 48px rgba(12, 5, 20, 0.4);
+            color: #fff8fa;
+            cursor: pointer;
+            transition: opacity 0.45s ease, transform 0.55s ease;
+        }
+
+        .envelope::before,
+        .envelope::after {
+            position: absolute;
+            inset: 0;
+            content: "";
+            border-radius: inherit;
+        }
+
+        .envelope::before {
+            z-index: 2;
+            background: #f7a2b7;
+            clip-path: polygon(0 0, 100% 0, 50% 62%);
+            transform-origin: top;
+            transition: transform 0.55s ease;
+        }
+
+        .envelope::after {
+            z-index: 1;
+            background: linear-gradient(145deg, #e9688c, #bb315f);
+            clip-path: polygon(0 100%, 0 0, 50% 58%, 100% 0, 100% 100%);
+        }
+
+        .envelope-label,
+        .envelope-seal,
+        .envelope-hint {
+            position: absolute;
+            z-index: 3;
+            left: 0;
+            width: 100%;
+            text-align: center;
+        }
+
+        .envelope-label {
+            top: 39%;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .envelope-seal {
+            bottom: 20%;
+            color: #a92752;
+            font-size: 28px;
+        }
+
+        .envelope-hint {
+            bottom: 7%;
+            font-size: 13px;
+        }
+
+        .letter-note {
+            position: absolute;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            padding: 18px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 8px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            background: rgba(255, 244, 247, 0.97);
+            box-shadow: 0 18px 48px rgba(12, 5, 20, 0.4);
+            color: #5b2036;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(18px) scale(0.94);
+            transition: opacity 0.45s ease, transform 0.55s ease;
+        }
+
+        .letter.is-open .envelope {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(24px) rotateX(-30deg) scale(0.82);
+        }
+
+        .letter.is-open .envelope::before {
+            transform: rotateX(180deg);
+        }
+
+        .letter.is-open .letter-note {
+            z-index: 4;
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0) scale(1);
+        }
+
+        .note-eyebrow {
+            margin: 0;
+            color: #b13b62;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .letter-note h1 {
+            margin: 0;
+            font-size: 26px;
+        }
+
+        .note-eyebrow,
+        .letter-note h1,
+        .score-summary {
+            text-align: center;
+        }
+
+        .heart-wrap {
+            width: 90px;
+            height: 78px;
+            flex: 0 0 auto;
+            display: grid;
+            place-items: center;
+        }
+
+        .letter-note .heart {
+            width: 52px;
+            height: 52px;
+        }
+
+        .letter-note .heart::before,
+        .letter-note .heart::after {
+            width: 52px;
+            height: 52px;
+        }
+
+        .letter-note .heart::before {
+            top: -26px;
+        }
+
+        .letter-note .heart::after {
+            left: 26px;
+        }
+
+        .letter-note .shine {
+            top: 6px;
+            left: 10px;
+            width: 20px;
+            height: 20px;
+        }
+
+        .score-summary {
+            margin: 0;
+            color: #762743;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .completion {
+            margin: 12px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            color: #762743;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .whatsapp-send {
+            padding: 11px 16px;
+            border-radius: 6px;
+            background: #168b57;
+            color: #fff;
+            font-size: 15px;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .whatsapp-send:hover {
+            background: #117448;
+        }
+
+        .whatsapp-send:focus-visible {
+            outline: 3px solid #762743;
+            outline-offset: 3px;
+        }
+
+        .whatsapp-note {
+            margin: 0;
+            font-size: 12px;
+            font-weight: normal;
+        }
+
+        .questions {
+            width: 100%;
+            display: grid;
+            gap: 8px;
+        }
+
+        .question[hidden],
+        .questions[hidden],
+        .completion[hidden] {
+            display: none;
+        }
+
+        .heart-confetti {
+            position: fixed;
+            inset: 0;
+            z-index: 5;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .heart-confetti span {
+            position: absolute;
+            top: -40px;
+            left: var(--left);
+            color: var(--color);
+            font-size: var(--size);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+            animation: heart-confetti-fall var(--duration) ease-in var(--delay) forwards;
+        }
+
+        @keyframes heart-confetti-fall {
+            0% {
+                opacity: 0;
+                transform: translateY(0) rotate(0deg);
+            }
+            12% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(110vh) rotate(var(--spin));
+            }
+        }
+
+        .question {
+            min-width: 0;
+            margin: 0;
+            padding: 9px 10px 10px;
+            border: 1px solid #e4a2b6;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.78);
+        }
+
+        .question legend {
+            max-width: 100%;
+            padding: 0 3px;
+            color: #5b2036;
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 1.35;
+        }
+
+        .rating-scale {
+            display: grid;
+            grid-template-columns: repeat(11, minmax(0, 1fr));
+            gap: 3px;
+            margin-top: 7px;
+        }
+
+        .rating-option {
+            position: relative;
+            min-width: 0;
+            cursor: pointer;
+        }
+
+        .rating-option input {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+        }
+
+        .rating-option span {
+            min-height: 28px;
+            display: grid;
+            place-items: center;
+            border: 1px solid #d87b98;
+            border-radius: 5px;
+            background: #fff;
+            color: #762743;
+            font-size: 12px;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        .rating-option input:checked + span {
+            border-color: #c83d6b;
+            background: #c83d6b;
+            color: #fff;
+        }
+
+        .rating-option input:focus-visible + span,
+        .envelope:focus-visible {
+            outline: 3px solid #762743;
+            outline-offset: 2px;
+        }
+
+        .answer-input {
+            width: 100%;
+            min-height: 54px;
+            margin-top: 8px;
+            padding: 8px 10px;
+            border: 1px solid #d9a0b2;
+            border-radius: 6px;
+            background: #fff;
+            color: #5b2036;
+            font: inherit;
+            font-size: 14px;
+            line-height: 1.4;
+            resize: vertical;
+        }
+
+        .answer-input:focus-visible {
+            outline: 2px solid #c83d6b;
+            outline-offset: 2px;
+        }
+
+        @media (max-width: 380px) {
+            .letter-note {
+                padding: 14px 10px;
+            }
+
+            .question {
+                padding-right: 6px;
+                padding-left: 6px;
+            }
+
+            .rating-scale {
+                gap: 2px;
+            }
+
+            .rating-option span {
+                min-height: 26px;
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .scene {
+                width: min(480px, calc(100vw - 52px));
+                height: min(680px, calc(100vh - 64px));
+                height: min(680px, calc(100dvh - 64px));
+            }
+        }
+
+        .love-background {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .love-background span {
+            position: absolute;
+            color: rgba(255, 190, 220, 0.24);
+            font-size: clamp(18px, 3vw, 32px);
+            font-weight: bold;
+            white-space: nowrap;
+            animation: drift 3s ease-in-out infinite alternate;
+        }
+
+        .love-background span:nth-child(1) { top: 12%; left: 8%; animation-delay: 0s; }
+        .love-background span:nth-child(2) { top: 25%; right: 7%; animation-delay: 0.6s; }
+        .love-background span:nth-child(3) { top: 72%; left: 12%; animation-delay: 1.1s; }
+        .love-background span:nth-child(4) { top: 82%; right: 8%; animation-delay: 0.3s; }
+        .love-background span:nth-child(5) { top: 48%; left: 4%; animation-delay: 1.5s; }
+        .love-background span:nth-child(6) { top: 55%; right: 3%; animation-delay: 0.9s; }
+
+        @keyframes drift {
+            from { transform: translateY(-14px); }
+            to { transform: translateY(14px); }
+        }
+
+        .heart {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(135deg, #f83707 0%, #f83302 38%, #ff0a5c 100%);
+            transform: rotate(-45deg);
+            border-radius: 12px;
+            box-shadow:
+                0 0 28px rgba(226, 12, 12, 0.9),
+                0 0 60px rgba(240, 4, 4, 0.7);
+            animation: beat 1.15s infinite ease-in-out, float 3s ease-in-out infinite;
+        }
+
+        .heart::before,
+        .heart::after {
+            content: "";
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background: inherit;
+            border-radius: 50%;
+        }
+
+        .heart::before {
+            top: -75px;
+            left: 0;
+        }
+
+        .heart::after {
+            top: 0;
+            left: 75px;
+        }
+
+        .shine {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.35);
+            border-radius: 50%;
+            top: 16px;
+            left: 28px;
+            filter: blur(8px);
+            transform: rotate(20deg);
+        }
+
+        @keyframes beat {
+            0%, 100% {
+                transform: rotate(-45deg) scale(1);
+            }
+            20% {
+                transform: rotate(-45deg) scale(1.12);
+            }
+            35% {
+                transform: rotate(-45deg) scale(0.96);
+            }
+            55% {
+                transform: rotate(-45deg) scale(1.18);
+            }
+            75% {
+                transform: rotate(-45deg) scale(1.06);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: rotate(-45deg) translateY(0px);
+            }
+            50% {
+                transform: rotate(-45deg) translateY(-18px);
+            }
+        }
+
+        @keyframes float-up {
+            0% {
+                opacity: 0;
+                transform: translateY(0) scale(0.65);
+            }
+            10%, 85% {
+                opacity: 0.85;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-110vh) scale(1.15);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="love-background" aria-hidden="true">
+        <span>Eu te amo Izabel</span> 
+        <span>Eu te amo Izabel</span>
+        <span>Eu te amo Izabel</span>
+        <span>Eu te amo Izabel</span>
+        <span>Eu te amo Izabel</span>
+        <span>Eu te amo Izabel</span>
+    </div>
+
+    <div class="heart-particles" aria-hidden="true">
+        <span>♥</span><span>♥</span><span>♥</span><span>♥</span><span>♥</span>
+        <span>♥</span><span>♥</span><span>♥</span><span>♥</span><span>♥</span><span>♥</span>
+    </div>
+    <div class="character-runners" id="character-runners" aria-hidden="true">
+        <span class="runner">🐰</span>
+        <span class="runner">🐻</span>
+        <span class="runner">🐱</span>
+        <span class="runner">🐶</span>
+    </div>
+    <div class="heart-confetti" id="heart-confetti" aria-hidden="true"></div>
+
+    <div class="scene" aria-label="Coração animado">
+        <div class="letter" id="letter">
+            <button class="envelope" type="button" aria-expanded="false" aria-controls="letter-note">
+                <span class="envelope-label">Para Izabel</span>
+                <span class="envelope-seal" aria-hidden="true">♥</span>
+                <span class="envelope-hint">Clique para abrir</span>
+            </button>
+            <section class="letter-note" id="letter-note" aria-hidden="true">
+                <p class="note-eyebrow">Uma cartinha para você</p>
+                <h1>Eu te amo</h1>
+                <div class="heart-wrap" aria-hidden="true">
+                    <div class="heart">
+                        <div class="shine"></div>
+                    </div>
+                </div>
+                <p class="score-summary">Pergunta <span id="current-question">1</span> de 7 · Pontuação: <output id="score-total">0</output> / 70 (<span id="answered-count">0</span>/7 respondidas)</p>
+                <div class="questions" id="questions"></div>
+                <div class="completion" id="completion" hidden>
+                    <p>Obrigada por responder!</p>
+                    <a class="whatsapp-send" id="whatsapp-send" target="_blank" rel="noopener noreferrer">Enviar pelo WhatsApp</a>
+                    <p class="whatsapp-note">Escolha o contato e confirme o envio no WhatsApp.</p>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const letter = document.querySelector(".letter");
+        const envelope = document.querySelector(".envelope");
+        const note = document.querySelector(".letter-note");
+        const questions = [
+            "O que você mais gosta em mim? de 0 a 10 me quer na sua cama? ",
+            "Você planeja alguma coisa a mais comigo? de 0 a 10 o quanto você me ama?",
+            "Em qual momento exato você percebeu que estava se apaixonando por mim? de 0 a 10 você me trocaria?",
+            "O que passou pela sua cabeça quando me viu pela primeira vez? de 0 a 10 o quanto você gosta da minha pegada?",
+            "Qual lembrança do nosso primeiro encontro você guarda com mais carinho? de o a 10 vc gosta quando eu chupo seu peito?",
+            "Qual gesto te faz sorrir ou te deixa com vontade de me abraçar na hora? de 0 a 10 Eu te faço feliz?",
+            "Qual é a coisa mais boba que eu faço que você acha secretamente fofa? de 0 a 10 vc tem pensamentos safados de mim?"
+        ];
+        const questionList = document.querySelector("#questions");
+        const scoreTotal = document.querySelector("#score-total");
+        const answeredCount = document.querySelector("#answered-count");
+        const currentQuestion = document.querySelector("#current-question");
+        const completion = document.querySelector("#completion");
+        const whatsappSend = document.querySelector("#whatsapp-send");
+        const heartConfetti = document.querySelector("#heart-confetti");
+        const characterRunners = document.querySelector("#character-runners");
+        const questionCards = [];
+        let currentQuestionIndex = 0;
+        let advanceTimer;
+
+        questions.forEach((question, questionIndex) => {
+            const fieldset = document.createElement("fieldset");
+            fieldset.className = "question";
+            fieldset.hidden = questionIndex !== 0;
+            questionCards.push(fieldset);
+
+            const legend = document.createElement("legend");
+            legend.textContent = question;
+            fieldset.append(legend);
+
+            const scale = document.createElement("div");
+            scale.className = "rating-scale";
+
+            for (let rating = 0; rating <= 10; rating += 1) {
+                const label = document.createElement("label");
+                label.className = "rating-option";
+
+                const input = document.createElement("input");
+                input.type = "radio";
+                input.name = `question-${questionIndex + 1}`;
+                input.value = rating;
+                input.addEventListener("change", () => {
+                    updateScore();
+                    if (answer.value.trim()) {
+                        scheduleAdvance(questionIndex);
+                    } else {
+                        answer.focus();
+                    }
+                });
+
+                const value = document.createElement("span");
+                value.textContent = rating;
+
+                label.append(input, value);
+                scale.append(label);
+            }
+
+            fieldset.append(scale);
+
+            const answer = document.createElement("textarea");
+            answer.className = "answer-input";
+            answer.rows = 2;
+            answer.placeholder = "Escreva o que você pensa...";
+            answer.setAttribute("aria-label", `Sua resposta para: ${question}`);
+            answer.addEventListener("input", () => {
+                updateScore();
+                scheduleAdvance(questionIndex);
+            });
+            answer.addEventListener("keydown", (event) => {
+                if (event.key === "Enter" && !event.shiftKey && hasRating(questionIndex)) {
+                    event.preventDefault();
+                    advanceQuestion(questionIndex);
+                }
+            });
+            fieldset.append(answer);
+
+            questionList.append(fieldset);
+        });
+
+        function updateScore() {
+            const selectedRatings = questionList.querySelectorAll("input:checked");
+            const total = [...selectedRatings].reduce((sum, input) => sum + Number(input.value), 0);
+            const completedAnswers = questionCards.filter((card) => {
+                return card.querySelector("input:checked") && card.querySelector("textarea").value.trim();
+            }).length;
+            scoreTotal.value = total;
+            scoreTotal.textContent = total;
+            answeredCount.textContent = completedAnswers;
+        }
+
+        function hasRating(questionIndex) {
+            return Boolean(questionCards[questionIndex].querySelector("input:checked"));
+        }
+
+        function scheduleAdvance(questionIndex) {
+            window.clearTimeout(advanceTimer);
+            const answer = questionCards[questionIndex].querySelector("textarea");
+            if (!hasRating(questionIndex) || !answer.value.trim()) return;
+
+            advanceTimer = window.setTimeout(() => advanceQuestion(questionIndex), 1500);
+        }
+
+        function advanceQuestion(questionIndex) {
+            if (questionIndex !== currentQuestionIndex || !hasRating(questionIndex)) return;
+            const answer = questionCards[questionIndex].querySelector("textarea");
+            if (!answer.value.trim()) return;
+
+            window.clearTimeout(advanceTimer);
+            questionCards[questionIndex].hidden = true;
+            currentQuestionIndex += 1;
+
+            if (currentQuestionIndex === questions.length) {
+                questionList.hidden = true;
+                completion.hidden = false;
+                characterRunners.classList.remove("is-active");
+                currentQuestion.textContent = "7";
+                whatsappSend.href = `https://wa.me/?text=${encodeURIComponent(buildWhatsAppMessage())}`;
+                launchHeartConfetti();
+                return;
+            }
+
+            currentQuestion.textContent = String(currentQuestionIndex + 1);
+            questionCards[currentQuestionIndex].hidden = false;
+            note.scrollTo({ top: 0, behavior: "smooth" });
+            questionCards[currentQuestionIndex].querySelector("input").focus();
+        }
+
+        function buildWhatsAppMessage() {
+            const responses = questionCards.map((card, index) => {
+                const rating = card.querySelector("input:checked").value;
+                const answer = card.querySelector("textarea").value.trim();
+                return `${index + 1}. ${questions[index]}\nNota: ${rating}/10\nResposta: ${answer}`;
+            });
+
+            return `Respostas para Izabel\n\n${responses.join("\n\n")}\n\nPontuação total: ${scoreTotal.textContent}/70`;
+        }
+
+        function launchHeartConfetti() {
+            const colors = ["#f83707", "#ff0a5c", "#e84379", "#f08aae"];
+
+            for (let index = 0; index < 48; index += 1) {
+                const heart = document.createElement("span");
+                heart.textContent = "♥";
+                heart.style.setProperty("--left", `${Math.random() * 100}%`);
+                heart.style.setProperty("--size", `${14 + Math.random() * 22}px`);
+                heart.style.setProperty("--color", colors[index % colors.length]);
+                heart.style.setProperty("--duration", `${2.4 + Math.random() * 2}s`);
+                heart.style.setProperty("--delay", `${Math.random() * 0.7}s`);
+                heart.style.setProperty("--spin", `${180 + Math.random() * 540}deg`);
+                heartConfetti.append(heart);
+            }
+        }
+
+        envelope.addEventListener("click", () => {
+            letter.classList.add("is-open");
+            characterRunners.classList.add("is-active");
+            envelope.setAttribute("aria-expanded", "true");
+            note.setAttribute("aria-hidden", "false");
+        });
+
+    </script>
+</body>
+</html>
